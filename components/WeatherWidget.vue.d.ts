@@ -3,7 +3,7 @@ declare const _default: import("vue").DefineComponent<import("vue").ExtractPropT
         default: string;
     };
     cities: {
-        default: () => string[];
+        default: any;
     };
     autoRefresh: {
         default: number;
@@ -15,13 +15,13 @@ declare const _default: import("vue").DefineComponent<import("vue").ExtractPropT
         default: string;
     };
     cities: {
-        default: () => string[];
+        default: any;
     };
     autoRefresh: {
         default: number;
     };
 }>> & Readonly<{}>, {
-    cities: string[];
+    cities: any;
     apiKey: string;
     autoRefresh: number;
 }, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
