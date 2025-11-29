@@ -62,13 +62,13 @@ import type { WeatherData, CityConfig, WidgetState } from '../types/weather';
 
 interface Props {
   apiKey?: string;
-  cities?: string[];
+  cities?: string[] | null;
   autoRefresh?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   apiKey: '5dfd0744e791c79f9bea358d2a4a4236',
-  cities: () => ['London', 'New York', 'Tokyo'],
+  cities: null,
   autoRefresh: 300000
 });
 
@@ -194,7 +194,7 @@ const initializeWidget = async (): Promise<void> => {
     
     if (savedCities.length > 0) {
       state.cities = [...savedCities];
-    } else if (props.cities.length > 0) {
+    } else if (props.cities && props.cities.length > 0) {
       const citiesConfig: CityConfig[] = props.cities.map((cityName, index) => ({
         id: `prop-${index}`,
         name: cityName,
@@ -205,8 +205,31 @@ const initializeWidget = async (): Promise<void> => {
       state.cities = citiesConfig;
       StorageService.saveCities(state.cities);
     } else {
-      await initializeWithUserLocation();
-      return;
+      try {
+        await initializeWithUserLocation();
+        return;
+      } catch (geoErr) {
+        console.warn('Geolocation failed, using default city London');
+        try {
+          const londonCities = await weatherService.searchCities('London');
+          if (londonCities.length > 0) {
+            state.cities = [londonCities[0]];
+          } else {
+            const defaultCity: CityConfig = {
+              id: 'default-london',
+              name: 'London',
+              lat: 51.5074,
+              lon: -0.1278,
+              country: 'GB'
+            };
+            state.cities = [defaultCity];
+          }
+          StorageService.saveCities(state.cities);
+        } catch (searchErr) {
+          console.error('Failed to search for default city:', searchErr);
+          error.value = 'Failed to load default location';
+        }
+      }
     }
     
     await loadWeatherDataWithRetry();
